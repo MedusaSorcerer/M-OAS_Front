@@ -1,0 +1,81 @@
+#role-list {
+    width: 30%;
+    float: left;
+    overflow: hidden;
+    max-height: 90%;
+    position: fixed;
+    overflow-y: scroll;
+}
+
+#role-list, #role-detail-box {
+    height: 100%;
+    top: 30px;
+}
+
+#role-list::-webkit-scrollbar {
+    display: none;
+}
+
+#role-list > p {
+    margin: 10px 30px 10px 30px;
+}
+
+#role-detail-box {
+    width: 70%;
+    float: right;
+    margin-top: 30px;
+}
+
+.layui-btn-primary {
+    border: 1px solid #C9C9C9;
+    background-color: #fff;
+    color: #555;
+    width: 100%;
+
+}
+
+.layui-tree-iconClick {
+    display: none;
+}
+
+.layui-tree-entry {
+    position: relative;
+    padding: 3px 0;
+    height: 20px;
+    white-space: nowrap;
+}
+
+.layui-tree-pack {
+    display: none;
+    padding-left: 50px;
+    position: relative;
+}
+
+.layui-tree {
+    line-height: 22px;
+    margin-left: 30%;
+}
+
+.layui-btn-primary:hover {
+    border-color: #009688;
+    color: #333;
+    background: #f6f6f6;
+}
+
+.layui-btn-primary:focus, .select {
+    background: #d7d7d7;
+}
+
+.layui-btn + .layui-btn {
+    margin-left: 0;
+}
+
+#role-detail {
+    width: 75%;
+    float: left;
+}
+
+.submit {
+    width: 20%;
+    margin-top: 20px;
+}
