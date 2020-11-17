@@ -43,7 +43,7 @@
                 <div id="1">
                     <input type="text" name="fk-1" autocomplete="off" class="layui-input" placeholder="请输入匹配字段名" key>
                     <div style="float: left;margin-right: 20px;"><i class="layui-icon" style="font-size: 38px; color: #1e9fff;">&#xe602;</i></div>
-                    <input type="text" name="fv-1" autocomplete="off" class="layui-input" placeholder="请输入匹配字段名" val>
+                    <input type="text" name="fv-1" autocomplete="off" class="layui-input" placeholder="请输入映射字段名" val>
                     <button type="button" class="layui-btn layui-btn-xs layui-btn-primary" onclick="add()" add>
                         <i class="layui-icon">&#xe624;</i>
                     </button>
@@ -55,7 +55,7 @@
         </div>
         <div class="layui-form-item">
             <div class="layui-input-block">
-                <button class="layui-btn" id="commit" lay-submit lay-filter="update" type="button">立即上传</button>
+                <button class="layui-btn" id="commit" lay-submit lay-filter="update" type="button">修改提交</button>
             </div>
         </div>
     </form>
@@ -114,7 +114,7 @@
             child.innerHTML = '' +
                 '<input type="text" name="fk-' + length + '" autocomplete="off" class="layui-input" placeholder="请输入匹配字段名" key>' +
                 '<div style="float: left;margin-right: 20px;"><i class="layui-icon" style="font-size: 38px; color: #1E9FFF;">&#xe602;</i></div>' +
-                '<input type="text" name="fv-' + length + '" autocomplete="off" class="layui-input" placeholder="请输入匹配字段名" val>' +
+                '<input type="text" name="fv-' + length + '" autocomplete="off" class="layui-input" placeholder="请输入映射字段名" val>' +
                 '<button type="button" class="layui-btn layui-btn-xs layui-btn-primary" onclick="add()" add>' +
                 '<i class="layui-icon">&#xe624;</i>' +
                 '</button>' +
@@ -184,6 +184,14 @@
                         length++;
                     }
                 }
+            } else {
+                var mapping = document.getElementById('mapping');
+                mapping.innerHTML = '' +
+                    '<div id="__all__">' +
+                    '<input type="text" name="fk-__all__" autocomplete="off" class="layui-input" value="__all__" key disabled>' +
+                    '<div style="float: left;margin-right: 20px;"><i class="layui-icon" style="font-size: 38px; color: #1E9FFF;">&#xe602;</i></div>' +
+                    '<input type="text" name="fv-__all__" autocomplete="off" class="layui-input" value="原数据" val disabled>' +
+                    '</div>'
             }
         });
 

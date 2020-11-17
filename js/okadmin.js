@@ -280,7 +280,7 @@ layui.use(["element", "form", "layer", "okUtils", "okTab", "okLayer", "okContext
         " 8  `888'   888   d888[.8'  888      888   .88ooo8888.        `\"Y88b \n" +
         " 8    Y     888  88' `88.   `88b    d88'  .8'     `888.  oo     .d8P \n" +
         "o8o        o888o `bodP'`88.  `Y8bood8P'  o88o     o8888o 8\"\"88888P'  \n" +
-        "                                                                                v 1.3.0 \n" +
+        "                                                                                v 1.4.0 \n" +
         "\n" +
         "To the world you may be one person\n" +
         "But to one person you may be the world\n" +
