@@ -2,7 +2,7 @@
 <html>
 <head>
     <meta charset="UTF-8">
-    <title>日报填报</title>
+    <title>月报填报</title>
     <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
     <link rel="stylesheet" href="../../css/okadmin.css">
 </head>
@@ -12,24 +12,24 @@
         <div class="layui-form-item">
             <label class="layui-form-label">填报人</label>
             <div class="layui-input-block">
-                <input type="text" name="person" autocomplete="off" class="layui-input" disabled>
+                <input type="text" name="submitter" autocomplete="off" class="layui-input" disabled>
             </div>
         </div>
         <div class="layui-form-item">
-            <label class="layui-form-label">日报时间</label>
+            <label class="layui-form-label">月报日期</label>
             <div class="layui-input-block">
                 <input type="text" class="layui-input" id="date" name="date">
             </div>
         </div>
         <div class="layui-form-item layui-form-text">
-            <label class="layui-form-label">日报信息</label>
+            <label class="layui-form-label">月报信息</label>
             <div class="layui-input-block">
                 <textarea id="content" name="content" class="layui-textarea"></textarea>
             </div>
         </div>
         <div class="layui-form-item" id="button">
             <div class="layui-input-block">
-                <button type="button" class="layui-btn" lay-submit lay-filter="del">日报填报</button>
+                <button type="button" class="layui-btn" lay-submit lay-filter="del">月报填报</button>
             </div>
         </div>
     </form>
@@ -46,9 +46,10 @@
         var laydate = layui.laydate;
 
         function init(date) {
-            okUtils.ajax(okMock.api.report + '/' + date, "get").done(function (response) {
-                form.val("filter", response.data);
+            okUtils.ajax(okMock.api.monthlyReport + '/' + date.replace('-', ''), "get").done(function (response) {
                 initData = response.data;
+                initData['date'] = date;
+                form.val("filter", initData);
             }).fail(function (error) {
                 console.log(error)
             });
@@ -57,6 +58,9 @@
         laydate.render({
             elem: '#date',
             value: new Date(),
+            type: 'month',
+            theme: 'grid',
+            trigger: 'click',
             done: function (value) {
                 init(value);
             }
@@ -65,8 +69,10 @@
         init(form.val('filter').date);
 
         form.on("submit(del)", function (data) {
+            data = data.field;
+            data['date'] = data['date'].replace('-', '');
             if (initData.id === null) {
-                okUtils.ajax(okMock.api.report, "post", data.field).done(function () {
+                okUtils.ajax(okMock.api.monthlyReport, "post", data).done(function () {
                     okLayer.greenTickMsg("填报成功", function () {
                         parent.layer.close(parent.layer.getFrameIndex(window.name));
                     });
@@ -74,7 +80,7 @@
                     console.log(error)
                 });
             } else {
-                okUtils.ajax(okMock.api.report + '/' + initData.id, "put", data.field).done(function () {
+                okUtils.ajax(okMock.api.monthlyReport + '/' + initData.id, "put", data).done(function () {
                     okLayer.greenTickMsg("更新日报成功", function () {
                         parent.layer.close(parent.layer.getFrameIndex(window.name));
                     });

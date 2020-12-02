@@ -17,16 +17,12 @@ layui.use(["form", "okLayer", "okUtils", "okMock", 'tree', 'util'], function () 
                 roleList[val.id] = {a: val.role, b: val.admin};
             }
             document.getElementById('role-list').innerHTML = inner;
-            if (response.data) {
-                roleId = response.data[0]['id'];
-                tree.setChecked('role', fit(roleList[roleId]['a'], true));
-                for (var doc1 of document.getElementById('tool').children) {
-                    if (doc1.getAttribute('lay-active') === 'add') {
-                        continue
-                    }
-                    doc1.classList.add('layui-btn-disabled');
-                }
+            var but = document.querySelector("button[data-id='" + okUtils.session('roleId') + "']");
+            if (!but) {
+                but = document.querySelector("button[data-id='" + response.data[0]['id'] + "']");
+                okUtils.session('roleId', response.data[0]['id']);
             }
+            but.click()
         }
     }).fail(function (error) {
         console.log(error);
@@ -61,6 +57,7 @@ layui.use(["form", "okLayer", "okUtils", "okMock", 'tree', 'util'], function () 
         }
         data.elem.classList.add('select');
         roleId = data.elem.getAttribute('data-id');
+        okUtils.session('roleId', roleId);
         tree.reload('role', {});
         tree.setChecked('role', fit(roleList[roleId]['a'], true));
         if (roleList[roleId]['b'] === true) {
@@ -91,7 +88,6 @@ layui.use(["form", "okLayer", "okUtils", "okMock", 'tree', 'util'], function () 
                 field: 'm/1',
                 id: 'm/1',
                 checked: true,
-                disabled: false,
             },
             {
                 title: '流程处理',
@@ -138,6 +134,18 @@ layui.use(["form", "okLayer", "okUtils", "okMock", 'tree', 'util'], function () 
                         spread: true,
                         field: 'm/4/1',
                         id: 'm/4/1',
+                    },
+                    {
+                        title: '工作月报',
+                        spread: true,
+                        field: 'm/4/2',
+                        id: 'm/4/2',
+                    },
+                    {
+                        title: '项目工程',
+                        spread: true,
+                        field: 'm/4/3',
+                        id: 'm/4/3',
                     }
                 ]
             },
@@ -241,7 +249,10 @@ layui.use(["form", "okLayer", "okUtils", "okMock", 'tree', 'util'], function () 
             var role = fit(tree.getChecked('role'));
             okUtils.ajax(okMock.api.role + '/' + roleId, 'put', JSON.stringify({role: role}), null, true, true).done(function () {
                 layer.msg('修改成功', {icon: 1, time: 1000}, function () {
-                    window.location.reload();
+                    window.location.reload(function () {
+                        document.getElementsByTagName('button')[5].click()
+
+                    });
                 });
             }).fail(function (error) {
                 console.log(error)
@@ -273,6 +284,7 @@ layui.use(["form", "okLayer", "okUtils", "okMock", 'tree', 'util'], function () 
             okLayer.confirm("确定要删除吗？", function () {
                 okUtils.ajax(okMock.api.role + '/' + roleId, 'delete').done(function () {
                     layer.msg('删除成功', {icon: 1, time: 1000}, function () {
+                        okUtils.session('roleId', null);
                         window.location.reload();
                     });
                 }).fail(function (error) {

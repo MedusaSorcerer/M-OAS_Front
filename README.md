@@ -10,7 +10,7 @@ ooo        ooooo   .oo.       .oooooo.         .o.        .oooooo..o
 o8o        o888o `bodP'`88.  `Y8bood8P'  o88o     o8888o 8""88888P'  
 ```
 
-### 当前版本：`v1.4.0`
+### 当前版本：`v1.5.0`
 
 * [M&OAS 后端](https://github.com/MedusaSorcerer/M-OAS)
 * [M&OAS 前端]()

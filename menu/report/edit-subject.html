@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>日报编辑</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/okadmin.css">
+    <style>
+        #slide {
+            padding-top: 15px;
+            width: 80%;
+            float: left;
+        }
+
+        #version-timeline {
+            padding: 50px;
+        }
+
+        .layui-timeline-title a {
+            display: none;
+        }
+
+        .layui-timeline-title:hover a {
+            display: inline;
+        }
+
+        .layui-timeline-title:hover a:hover {
+            text-decoration: none;
+        }
+    </style>
+</head>
+<body style="padding: 30px">
+<div class="ok-body">
+    <form class="layui-form ok-form" lay-filter="filter">
+        <div class="layui-form-item">
+            <label class="layui-form-label">项目名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" autocomplete="off" class="layui-input" required lay-verify="required">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">项目组</label>
+            <div class="layui-input-block">
+                <input type="text" name="team" autocomplete="off" class="layui-input" required lay-verify="required">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">所属人</label>
+            <div class="layui-input-block">
+                <select id="pertain" name="pertain" required lay-verify="required" lay-filter="pertain" lay-search>
+                    <option value="">请选择一个所属用户</option>
+                </select>
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">项目进度</label>
+            <div class="layui-input-block">
+                <div id="slide"></div>
+                <div id="slide-info" style="padding: 10px 10% 0 0;float: right;">0%</div>
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">立项时间</label>
+            <div class="layui-input-block">
+                <input class="layui-input" placeholder="立项时间" autocomplete="off" id="establish" name="establish" required lay-verify="required">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">结项时间</label>
+            <div class="layui-input-block" id="accomplish-box">
+                <input class="layui-input" placeholder="结项时间" autocomplete="off" id="accomplish" name="accomplish" required lay-verify="required">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">项目描述</label>
+            <div class="layui-input-block">
+                <textarea name="description" class="layui-textarea"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item" id="button">
+            <div class="layui-input-block">
+                <button type="button" class="layui-btn" lay-submit lay-filter="submit">提交修改</button>
+            </div>
+        </div>
+    </form>
+    <hr>
+    <div id="version-timeline">
+        <ul id="layui-timeline" class="layui-timeline"></ul>
+    </div>
+</div>
+<script src="../../lib/layui/layui.js"></script>
+<script src="../../lib/showdown-1.9.1/dist/showdown.min.js"></script>
+<script>
+    let initData;
+
+    function initForm(data) {
+        let jsonString = JSON.stringify(data);
+        initData = JSON.parse(jsonString);
+    }
+
+    layui.use(["form", "laydate", "okLayer", "okUtils", "okMock", 'slider'], function () {
+        var form = layui.form;
+        var okLayer = layui.okLayer;
+        var okUtils = layui.okUtils;
+        var okMock = layui.okMock;
+        var slider = layui.slider;
+        var laydate = layui.laydate;
+        var converter = new showdown.Converter();
+        var page = 1;
+        var version_sign = true;
+        var version_obj = {};
+        var new_timeline_index;
+        document.getElementById('slide-info').innerText = initData.schedule + '%';
+        form.val("filter", initData);
+
+        slider.render({
+            elem: '#slide',
+            value: initData.schedule,
+            setTips: function (value) {
+                return value + '%';
+            },
+            change: function (value) {
+                document.getElementById('slide-info').innerText = value;
+            }
+        });
+
+        laydate.render({
+            elem: "#establish",
+            type: "date",
+            trigger: 'click',
+            showBottom: false,
+            done: function (value) {
+                document.getElementById('accomplish-box').innerHTML = '<input class="layui-input" placeholder="结项时间" autocomplete="off" id="accomplish" name="accomplish" required lay-verify="required">';
+                laydate.render({
+                    elem: "#accomplish",
+                    type: "date",
+                    trigger: 'click',
+                    showBottom: false,
+                    min: value,
+                });
+                form.render('select');
+            }
+        });
+
+        function option() {
+            okUtils.ajax(okMock.api.listUser, "get", {'page': page, 'limit': 100}).done(function (response) {
+                var inner = '';
+                for (var val of response.data) {
+                    inner += '<option value="' + val.id + '" ' + (val.id === initData.pertain ? 'selected' : '') + '>' + val.get_full_name + '</option>'
+                    document.getElementById('pertain').innerHTML += inner;
+                }
+                if (response.next) {
+                    page += 1;
+                    option();
+                }
+                form.render('select');
+            }).fail(function (error) {
+                console.log(error);
+            });
+        }
+
+        option()
+
+        form.on("submit(submit)", function (data) {
+            data = data.field;
+            data['schedule'] = document.getElementById('slide-info').innerText.replace('%', '');
+            okUtils.ajax(okMock.api.subject + '/' + initData.id, "put", data).done(function () {
+                okLayer.greenTickMsg("更新日报成功", function () {
+                    parent.layer.close(parent.layer.getFrameIndex(window.name));
+                });
+            }).fail(function (error) {
+                console.log(error)
+            });
+            return false;
+        });
+
+        window.version_edit = function (id) {
+            if (version_sign === true) {
+                version_sign = false;
+                document.getElementById('version-management-' + id).innerHTML = '' +
+                    '<form class="layui-form ok-form" lay-filter="version">' +
+                    '<div class="layui-form-item">' +
+                    '<label class="layui-form-label">版本号</label>' +
+                    '<div class="layui-input-block">' +
+                    '<input type="text" name="version" autocomplete="off" class="layui-input" required lay-verify="required" value="' + version_obj[id].version + '">' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="layui-form-item">' +
+                    '<label class="layui-form-label">版本描述</label>' +
+                    '<div class="layui-input-block">' +
+                    '<textarea name="document" class="layui-textarea" required lay-verify="required">' + version_obj[id].document + '</textarea>' +
+                    '</div>' +
+                    '</div>' +
+                    '<div class="layui-form-item">' +
+                    '<div class="layui-input-block">' +
+                    '<button type="button" class="layui-btn layui-btn-sm" lay-submit lay-filter="version-submit" id="version-submit-' + id + '">提交修改</button>' +
+                    '<button type="button" class="layui-btn layui-btn-sm layui-btn-primary" onclick="version_cancel(' + id + ')">取消修改</button>' +
+                    '</div>' +
+                    '</div>' +
+                    '</form>'
+            }
+        }
+
+        form.on("submit(version-submit)", function (data) {
+            var id = data.elem.id.replace('version-submit-', '');
+            okUtils.ajax(okMock.api.versionManagement + '/' + id, "put", data.field).done(function () {
+                layer.msg('更新成功', {icon: 1, time: 1000}, function () {
+                    versionInfo();
+                    version_sign = true;
+                });
+            }).fail(function (error) {
+                console.log(error)
+            });
+        });
+
+        form.on("submit(version-add)", function (data) {
+            data = data.field;
+            data['id'] = initData.id;
+            okUtils.ajax(okMock.api.versionManagement, "post", data).done(function () {
+                layer.msg('新增成功', {icon: 1, time: 1000}, function () {
+                    layer.close(new_timeline_index);
+                    versionInfo();
+                });
+            }).fail(function (error) {
+                console.log(error)
+            });
+        });
+
+        window.version_cancel = function (id) {
+            document.getElementById('version-management-' + id).innerHTML = '' +
+                '<h3 class="layui-timeline-title" id="version-management-version-' + id + '">' + version_obj[id].version +
+                '<a href="javascript:" title="编辑" onclick="version_edit(' + id + ')"><i class="layui-icon">&#xe642;</i></a>' +
+                '<a href="javascript:" title="新增" onclick="version_add()"><i class="layui-icon">&#xe654;</i></a>' +
+                '<a href="javascript:" title="删除" onclick="version_del(' + id + ')"><i class="layui-icon">&#xe640;</i></a>' +
+                '</h3>' +
+                '<p id="version-management-document-' + id + '">' + converter.makeHtml(version_obj[id].document) + '</p>';
+            version_sign = true;
+        }
+
+        window.version_add = function () {
+            new_timeline_index = layer.tab({
+                area: ['600px', '300px'],
+                tab: [{
+                    title: '新增时间线',
+                    content: '' +
+                        '<form class="layui-form ok-form" lay-filter="new-version" style="margin-right: 15px;margin-top: 20px;">' +
+                        '<div class="layui-form-item">' +
+                        '<label class="layui-form-label">版本号</label>' +
+                        '<div class="layui-input-block">' +
+                        '<input type="text" name="version" autocomplete="off" class="layui-input" required lay-verify="required">' +
+                        '</div>' +
+                        '</div>' +
+                        '<div class="layui-form-item">' +
+                        '<label class="layui-form-label">版本描述</label>' +
+                        '<div class="layui-input-block">' +
+                        '<textarea name="document" class="layui-textarea" required lay-verify="required"></textarea>' +
+                        '</div>' +
+                        '</div>' +
+                        '<div class="layui-form-item">' +
+                        '<div class="layui-input-block">' +
+                        '<button type="button" class="layui-btn layui-btn-sm" lay-submit lay-filter="version-add">提交新增</button>' +
+                        '</div>' +
+                        '</div>' +
+                        '</form>'
+                }]
+            });
+        }
+
+        window.version_del = function (id) {
+            if (version_sign === true) {
+                okLayer.confirm("确定要删除吗？", function (index) {
+                    layer.close(index);
+                    okUtils.ajax(okMock.api.versionManagement + '/' + id, "delete").done(function (response) {
+                        layer.msg('删除成功', {icon: 1, time: 1000}, function () {
+                            versionInfo();
+                        });
+                    }).fail(function (error) {
+                        console.log(error)
+                    });
+                });
+            }
+        }
+
+        function versionInfo() {
+            okUtils.ajax(okMock.api.versionManagement + '/' + initData.id, 'get').done(function (response) {
+                if (response.status === 200) {
+                    var inner = '';
+                    version_obj = {};
+                    for (var val of response.data) {
+                        version_obj[val.id] = {version: val.version, document: val.document};
+                        inner += '' +
+                            '<li class="layui-timeline-item">' +
+                            '<i class="layui-icon layui-timeline-axis">&#xe63f;</i>' +
+                            '<div class="layui-timeline-content layui-text" id="version-management-' + val.id + '">' +
+                            '<h3 class="layui-timeline-title" id="version-management-version-' + val.id + '">' + val.version +
+                            '<a href="javascript:" title="编辑" onclick="version_edit(' + val.id + ')"><i class="layui-icon">&#xe642;</i></a>' +
+                            '<a href="javascript:" title="新增" onclick="version_add()"><i class="layui-icon">&#xe654;</i></a>' +
+                            '<a href="javascript:" title="删除" onclick="version_del(' + val.id + ')"><i class="layui-icon">&#xe640;</i></a>' +
+                            '</h3>' +
+                            '<p id="version-management-document-' + val.id + '">' + converter.makeHtml(val.document) + '</p>' +
+                            '</div>' +
+                            '</li>';
+                    }
+                    if (inner === '') {
+                        inner += '<button type="button" class="layui-btn layui-btn-sm layui-btn-primary" onclick="version_add()">新增时间线</button>'
+                    }
+                    document.getElementById('layui-timeline').innerHTML = inner;
+                }
+            })
+        }
+
+        versionInfo();
+    })
+</script>
+</body>
+</html>

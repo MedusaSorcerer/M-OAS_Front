@@ -1,0 +1,144 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <title>项目工程</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/oksub.css">
+    <script type="text/javascript" src="../../lib/loading/okLoading.js"></script>
+    <style>
+        .layui-progress-text {
+            top: -16px;
+        }
+    </style>
+</head>
+<body>
+<div class="ok-body">
+    <div class="layui-row">
+        <form class="layui-form layui-col-md12 ok-search">
+            <input class="layui-input" placeholder="日报时间" autocomplete="off" id="date" name="date">
+            <button class="layui-btn" lay-submit="" lay-filter="search">
+                <i class="layui-icon layui-icon-search"></i>
+            </button>
+        </form>
+    </div>
+    <table class="layui-hide" id="reportId" lay-filter="reportFilter"></table>
+</div>
+<script src="../../lib/layui/layui.js"></script>
+<script>
+    layui.use(["element", "table", "form", "okLayer", "okUtils", "okMock"], function () {
+        let element = layui.element;
+        let table = layui.table;
+        let form = layui.form;
+        let okLayer = layui.okLayer;
+        let okUtils = layui.okUtils;
+        let okMock = layui.okMock;
+
+        let articleTable = table.render({
+            elem: "#reportId",
+            url: okMock.api.subject,
+            limit: 20,
+            page: true,
+            even: true,
+            toolbar: "#toolbarTpl",
+            size: "sm",
+            headers: {'Authorization': okUtils.local('M&OAS-token')},
+            cols: [[
+                {type: "checkbox", fixed: "left"},
+                {field: "id", title: "ID", width: 60},
+                {field: 'name', title: "项目名称", width: 200},
+                {field: 'schedule', title: "进度", width: 200, templet: "#progress"},
+                {field: 'team', title: "项目组", width: 200},
+                {field: 'pertain_info', title: "项目负责人", width: 200},
+                {field: 'last_version', title: "最近版本", width: 200},
+                {field: 'establish', title: "立项时间", width: 100, templet: "<div>{{ layui.util.toDateString(d.establish, \"yyyy-MM-dd\") }}</div>"},
+                {field: 'accomplish', title: "结项时间", width: 100, templet: "<div>{{ layui.util.toDateString(d.accomplish, \"yyyy-MM-dd\") }}</div>"},
+                {field: 'update', title: "更新时间", width: 145, templet: "<div>{{ layui.util.toDateString(d.update, \"yyyy-MM-dd HH:mm:ss\") }}</div>"},
+                {title: "操作", width: 70, align: "center", fixed: "right", templet: "#operationTpl"},
+            ]],
+            done: function () {
+                element.init();
+            }
+        });
+
+        form.on("submit(search)", function (data) {
+            articleTable.reload({
+                where: data.field,
+                page: {curr: 1}
+            });
+            return false;
+        });
+
+        table.on("toolbar(reportFilter)", function (obj) {
+            switch (obj.event) {
+                case "add-subject":
+                    add_report();
+                    break;
+            }
+        });
+
+        table.on("tool(reportFilter)", function (obj) {
+            let data = obj.data;
+            switch (obj.event) {
+                case "edit":
+                    edit_report(data);
+                    break;
+                case "del":
+                    del_report(data.id);
+                    break;
+            }
+        });
+
+        function add_report() {
+            okLayer.open("新增项目", "add-subject.html", "90%", "90%", null, function () {
+                articleTable.reload();
+            })
+        }
+
+        function edit_report(data) {
+            okLayer.open("项目编辑", "edit-subject.html", "90%", "90%", function (layero) {
+                let iframeWin = window[layero.find("iframe")[0]["name"]];
+                iframeWin.initForm(data);
+            }, function () {
+                articleTable.reload();
+            })
+        }
+
+        function del_report(id) {
+            okLayer.confirm("确定要删除吗？", function (index) {
+                layer.close(index);
+                okUtils.ajax(okMock.api.subject + '/' + id, "delete").done(function () {
+                    okUtils.tableSuccessMsg('删除成功', function () {
+                        parent.layer.close(parent.layer.getFrameIndex(window.name));
+                    });
+                }).fail(function (error) {
+                    console.log(error)
+                });
+            });
+        }
+
+        okLoading.close();
+    })
+</script>
+<script type="text/html" id="toolbarTpl">
+    <div class="layui-btn-container">
+        <button class="layui-btn layui-btn-sm" lay-event="add-subject">新增项目</button>
+    </div>
+</script>
+<script type="text/html" id="operationTpl">
+    <a href="javascript:" title="编辑" lay-event="edit"><i class="layui-icon">&#xe642;</i></a>
+    <a href="javascript:" title="删除" lay-event="del"><i class="layui-icon">&#xe640;</i></a>
+</script>
+<script type="text/html" id="progress">
+    <div class="layui-progress" style="margin-top: 13px;" lay-showPercent="yes">
+        {{# if(d.schedule < 50){ }}
+        <div class="layui-progress-bar layui-bg-red" lay-percent="{{ d.schedule }}%"></div>
+        {{# } else if (d.schedule < 99) { }}
+        <div class="layui-progress-bar layui-bg-orange" lay-percent="{{ d.schedule }}%"></div>
+        {{# } else { }}
+        <div class="layui-progress-bar layui-bg-green" lay-percent="{{ d.schedule }}%"></div>
+        {{# } }}
+    </div>
+</script>
+</body>
+</html>

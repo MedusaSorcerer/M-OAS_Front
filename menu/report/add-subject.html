@@ -1,0 +1,123 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="UTF-8">
+    <title>新增项目</title>
+    <meta name="viewport" content="width=device-width, initial-scale=1, maximum-scale=1">
+    <link rel="stylesheet" href="../../css/okadmin.css">
+    <style>
+        #slide {
+            padding-top: 15px;
+            width: 80%;
+            float: left;
+        }
+    </style>
+</head>
+<body style="padding: 30px">
+<div class="ok-body">
+    <form class="layui-form ok-form" lay-filter="filter">
+        <div class="layui-form-item">
+            <label class="layui-form-label">项目名称</label>
+            <div class="layui-input-block">
+                <input type="text" name="name" autocomplete="off" class="layui-input" required lay-verify="required">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">项目组</label>
+            <div class="layui-input-block">
+                <input type="text" name="team" autocomplete="off" class="layui-input" required lay-verify="required">
+            </div>
+        </div>
+        <div class="layui-form-item">
+            <label class="layui-form-label">项目进度</label>
+            <div class="layui-input-block">
+                <div id="slide"></div>
+                <div id="slide-info" style="padding: 10px 10% 0 0;float: right;">0%</div>
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">立项时间</label>
+            <div class="layui-input-block">
+                <input class="layui-input" placeholder="立项时间" autocomplete="off" id="establish" name="establish" required lay-verify="required">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">结项时间</label>
+            <div class="layui-input-block" id="accomplish-box">
+                <input class="layui-input" placeholder="结项时间" autocomplete="off" id="accomplish" name="accomplish" required lay-verify="required">
+            </div>
+        </div>
+        <div class="layui-form-item layui-form-text">
+            <label class="layui-form-label">项目描述</label>
+            <div class="layui-input-block">
+                <textarea name="description" class="layui-textarea"></textarea>
+            </div>
+        </div>
+        <div class="layui-form-item" id="button">
+            <div class="layui-input-block">
+                <button type="button" class="layui-btn" lay-submit lay-filter="submit">提交新增</button>
+            </div>
+        </div>
+    </form>
+</div>
+<script src="../../lib/layui/layui.js"></script>
+<script>
+    let initData;
+
+    layui.use(["form", "okLayer", "okUtils", "okMock", "laydate", 'slider'], function () {
+        var form = layui.form;
+        var okLayer = layui.okLayer;
+        var okUtils = layui.okUtils;
+        var okMock = layui.okMock;
+        var laydate = layui.laydate;
+        var slider = layui.slider;
+
+        slider.render({
+            elem: '#slide',
+            setTips: function (value) {
+                return value + '%';
+            },
+            change: function (value) {
+                document.getElementById('slide-info').innerText = value;
+            }
+        });
+
+        form.on('select(pertain)', function (data) {
+            console.log(data);
+            return false
+        });
+
+        laydate.render({
+            elem: "#establish",
+            type: "date",
+            trigger: 'click',
+            showBottom: false,
+            done: function (value) {
+                document.getElementById('accomplish-box').innerHTML = '<input class="layui-input" placeholder="结项时间" autocomplete="off" id="accomplish" name="accomplish" required lay-verify="required">';
+                laydate.render({
+                    elem: "#accomplish",
+                    type: "date",
+                    trigger: 'click',
+                    showBottom: false,
+                    min: value,
+                });
+                form.render('select');
+            }
+        });
+
+        form.on("submit(submit)", function (data) {
+            data = data.field;
+            data['schedule'] = document.getElementById('slide-info').innerText.replace('%', '');
+            okUtils.ajax(okMock.api.subject, "post", data).done(function () {
+                okLayer.greenTickMsg("填报成功", function () {
+                    parent.layer.close(parent.layer.getFrameIndex(window.name));
+                });
+            }).fail(function (error) {
+                console.log(error)
+            });
+            return false;
+        });
+    })
+</script>
+</body>
+</html>
